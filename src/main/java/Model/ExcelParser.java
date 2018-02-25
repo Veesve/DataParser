@@ -59,8 +59,8 @@ public class ExcelParser implements Parser {
                                   HSSFSheet spreadsheet,
                                   ArrayList<String> marks) throws IOException { //созадние файла с выходными данными
         // записываем в файл .csv с пометкой группы
-        String inputFileNewName = inputFile.getName().replace(".xls", "_" + spreadsheet.getSheetName() + ".csv");
-        File outputFile = new File(outputDir, inputFileNewName);
+        String outputFileName = inputFile.getName().replace(".xls", "_" + spreadsheet.getSheetName() + ".csv");
+        File outputFile = new File(outputDir, outputFileName);
         Writer wr = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8);
 
         for (String s : marks)
