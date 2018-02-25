@@ -12,10 +12,7 @@ import java.util.ArrayList;
 public class ExcelParser implements Parser {
 
     @Override
-    public void parseData(File inputFile, File outputFile) throws IOException { //метод обработки данных из входного файла
-
-        System.out.println(inputFile.getAbsolutePath());
-        System.out.println(outputFile.getAbsolutePath());
+    public void parseData(File inputFile, File outputDir) throws IOException { //метод обработки данных из входного файла
 
         NPOIFSFileSystem fs = new NPOIFSFileSystem(inputFile);                          // открываем файл, первый лист
         HSSFWorkbook workbook = new HSSFWorkbook(fs.getRoot(), true);
@@ -26,7 +23,7 @@ public class ExcelParser implements Parser {
 
         int capacity = spreadsheet.getPhysicalNumberOfRows()-7;                        // получаем размер массива равный количеству студентов в группе
 
-        ArrayList<String> marks = new ArrayList<String>(capacity);                          // строка оценок студента за все время
+        ArrayList<String> marks = new ArrayList<>(capacity);                          // строка оценок студента за все время
         for (int i = 1; i <= capacity; i++)
             marks.add(spreadsheet.getRow(6+i).getCell(1).getStringCellValue()); // заполняем ФИО
 
@@ -51,23 +48,26 @@ public class ExcelParser implements Parser {
                 }
             }
         }
+        createOutputFile(inputFile, outputDir, fs, spreadsheet, marks);
 
+
+    }
+
+    private void createOutputFile(File inputFile,
+                                  File outputDir,
+                                  NPOIFSFileSystem fs,
+                                  HSSFSheet spreadsheet,
+                                  ArrayList<String> marks) throws IOException { //созадние файла с выходными данными
         // записываем в файл .csv с пометкой группы
-        Writer wr = new OutputStreamWriter(new FileOutputStream(new File(outputFile
-                                                                , inputFile.getName().replace(".xls",  "_" + spreadsheet.getSheetName() + ".csv")))
-                                                                , StandardCharsets.UTF_8);
-        /*Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile +
-                                                                    inputFile.getName().replace(".xls",  "_" + spreadsheet.getSheetName() + ".csv"))
-                                                                    , StandardCharsets.UTF_8);*/
+        String inputFileNewName = inputFile.getName().replace(".xls", "_" + spreadsheet.getSheetName() + ".csv");
+        File outputFile = new File(outputDir, inputFileNewName);
+        Writer wr = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8);
+
         for (String s : marks)
             wr.write(s+'\n');
 
         wr.close(); // сворачиваемся
         fs.close();
-
     }
 
-    private void createOutputFile(File outputFile) { //метод в котором должен создаваться XLSX файл в котором будет результат парса
-
-    }
 }

@@ -24,7 +24,7 @@ import java.io.IOException;
 public class FXView extends Application {
 
     private static File inpXSLFile; //файл, получаемый для обработки данных
-    private static File outXLSFile; //файл, в которой выводится результат обработки данных
+    private static File outXLSDir; //файл, в которой выводится результат обработки данных
 
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Data Parser");
@@ -62,9 +62,9 @@ public class FXView extends Application {
 
         outputFileButton.setOnAction(event -> {
             final DirectoryChooser directoryChooser = new DirectoryChooser();
-            outXLSFile = directoryChooser.showDialog(primaryStage);
-            if (outXLSFile != null) {
-                outputFileName.setText(outXLSFile.getAbsolutePath());
+            outXLSDir = directoryChooser.showDialog(primaryStage);
+            if (outXLSDir != null) {
+                outputFileName.setText(outXLSDir.getAbsolutePath());
             }
         }); //сохранение данных о файле в переменную и вывод пути в TextField
 
@@ -77,7 +77,7 @@ public class FXView extends Application {
                 @Override
                 protected Object call() throws IOException {
                     Controller controller = new Controller();
-                    Model model = new Model(inpXSLFile,outXLSFile,new ExcelParser());
+                    Model model = new Model(inpXSLFile, outXLSDir,new ExcelParser());
                     controller.setModel(model);
                     controller.parseData();
                     return null;
@@ -120,8 +120,8 @@ public class FXView extends Application {
                 new File(System.getProperty("user.home")) //установка начальной директории при выборе файла
         );
         fileChooser.getExtensionFilters().addAll( //установка фильтра на расширение
-                new FileChooser.ExtensionFilter("XLSX","*.xlsx"),
-                new FileChooser.ExtensionFilter("XLS","*.xls")
+                new FileChooser.ExtensionFilter("XLS","*.xls"),
+                new FileChooser.ExtensionFilter("XLSX","*.xlsx")
         );
     }
 
