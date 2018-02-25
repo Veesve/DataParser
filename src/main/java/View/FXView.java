@@ -19,6 +19,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.File;
+import java.io.IOException;
 
 public class FXView extends Application {
 
@@ -74,7 +75,7 @@ public class FXView extends Application {
         confirmButton.setOnAction(event -> {
             Task parseData = new Task() { //специальный класс для потоков в JavaFX
                 @Override
-                protected Object call() {
+                protected Object call() throws IOException {
                     Controller controller = new Controller();
                     Model model = new Model(inpXSLFile,outXLSFile,new ExcelParser());
                     controller.setModel(model);
@@ -119,7 +120,8 @@ public class FXView extends Application {
                 new File(System.getProperty("user.home")) //установка начальной директории при выборе файла
         );
         fileChooser.getExtensionFilters().addAll( //установка фильтра на расширение
-                new FileChooser.ExtensionFilter("XSLX","*.xlsx")
+                new FileChooser.ExtensionFilter("XLSX","*.xlsx"),
+                new FileChooser.ExtensionFilter("XLS","*.xls")
         );
     }
 

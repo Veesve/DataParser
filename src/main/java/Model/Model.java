@@ -1,6 +1,7 @@
 package Model;
 
 import java.io.File;
+import java.io.IOException;
 
 public class Model {
     private File inputFile;
@@ -13,7 +14,7 @@ public class Model {
         this.parser = parser;
     }
 
-    public void parseData(){
+    public void parseData() throws IOException {
         parser.parseData(inputFile,outputFile);
     }
 }
