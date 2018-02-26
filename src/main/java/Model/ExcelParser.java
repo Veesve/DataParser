@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.Row;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ExcelParser implements Parser {
 
@@ -18,8 +19,23 @@ public class ExcelParser implements Parser {
 
         NPOIFSFileSystem fs = new NPOIFSFileSystem(inputFile);                          // открываем файл, первый лист
         HSSFWorkbook workbook = new HSSFWorkbook(fs.getRoot(), true);
-        HSSFSheet spreadsheet = workbook.getSheetAt(0);                          // TODO просмотр всех листов (групп)
+        List<String> spreadsheetNames = new ArrayList<>(); //список имен таблиц
+        List<List<String>> marksList = new ArrayList<>();//список оценок студентов
 
+        int sheetsCount = workbook.getNumberOfSheets();
+        for(int i = 0;i<sheetsCount;i++) {
+            HSSFSheet spreadsheet = workbook.getSheetAt(i);
+            spreadsheetNames.add(spreadsheet.getSheetName());
+            ArrayList<String> marks = getSheetInfo(spreadsheet);
+            marksList.add(marks);
+        }
+        //createOutputCSVFile(inputFile, outputDir, fs, spreadsheet, marks); // пусть останется до лучших времён
+        createOutputXLSFile(inputFile,outputDir,fs,spreadsheetNames,marksList);
+
+
+    }
+
+    private ArrayList<String> getSheetInfo(HSSFSheet spreadsheet) { //получение строки данных из одного листа
         Row headRow = spreadsheet.getRow(6);                                  // строка для работы с оглавлением таблицы (строка 7)
         int headCellIndex = 1;                                                         // индекс для работы со столбцами оглавления
 
@@ -50,10 +66,7 @@ public class ExcelParser implements Parser {
                 }
             }
         }
-       // createOutputCSVFile(inputFile, outputDir, fs, spreadsheet, marks);
-        createOutputXLSFile(inputFile,outputDir,fs,spreadsheet,marks);
-
-
+        return marks;
     }
 
     private void createOutputCSVFile(File inputFile,
@@ -76,31 +89,32 @@ public class ExcelParser implements Parser {
     private void createOutputXLSFile(File inputFile,
                                      File outputDir,
                                      NPOIFSFileSystem fs,
-                                     HSSFSheet spreadsheet,
-                                     ArrayList<String> marks) throws IOException { //создание XLS файла с подсчитанным средним арифметическим
-        String outputFileName = inputFile.getName().replace(".xls", "_" + spreadsheet.getSheetName() + ".xls");
-        File outputFile = new File(outputDir,outputFileName);
+                                     List<String> spreadsheetNames,
+                                     List<List<String>> marksList) throws IOException { //создание XLS файла с подсчитанным средним арифметическим
+        File outputFile = new File(outputDir,"Date Analyse Result.xls");
         FileOutputStream fileOut = new FileOutputStream(outputFile);
         HSSFWorkbook workbook = new HSSFWorkbook();
-        HSSFSheet worksheet = workbook.createSheet(spreadsheet.getSheetName());
+        for(int i = 0;i<spreadsheetNames.size();i++) { //воссоздание страниц для каждой группы отдельно
+            HSSFSheet worksheet = workbook.createSheet(spreadsheetNames.get(i));
+            List<String> marks = marksList.get(i);
+            HSSFRow row1 = worksheet.createRow((short) 0);
 
-        HSSFRow row1 = worksheet.createRow((short)0);
+            HSSFCell cellA1 = row1.createCell((short) 0);
+            cellA1.setCellValue("ФИО студента");
+            HSSFCell cellB1 = row1.createCell((short) 1);
+            cellB1.setCellValue("Средний балл");
+            for (int j = 0; j < marks.size(); j++) {
+                HSSFRow rowI = worksheet.createRow((short) j + 1);
+                String s = marks.get(j);
+                HSSFCell cell1 = rowI.createCell((short) 0);
+                cell1.setCellValue(s.split(",")[0]);
 
-        HSSFCell cellA1 = row1.createCell((short)0);
-        cellA1.setCellValue("ФИО студента");
-        HSSFCell cellB1 = row1.createCell((short)1);
-        cellB1.setCellValue("Средний балл");
-        for(int i = 0;i<marks.size();i++){
-            HSSFRow rowI = worksheet.createRow((short)i+1);
-            String s = marks.get(i);
-            HSSFCell cell1 = rowI.createCell((short)0);
-            cell1.setCellValue(s.split(",")[0]);
-
-            HSSFCell cell2 = rowI.createCell((short)1);
-            cell2.setCellValue(computeAverageMark(s));
+                HSSFCell cell2 = rowI.createCell((short) 1);
+                cell2.setCellValue(computeAverageMark(s));
+            }
+            worksheet.autoSizeColumn(0);
+            worksheet.autoSizeColumn(1);
         }
-        worksheet.autoSizeColumn(0);
-        worksheet.autoSizeColumn(1);
         workbook.write(fileOut);
         fileOut.flush();
         fileOut.close();
