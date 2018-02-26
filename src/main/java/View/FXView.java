@@ -10,14 +10,14 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import javafx.stage.*;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -58,6 +58,10 @@ public class FXView extends Application {
         outputFileName.setEditable(false);
         outputFileName.setPrefColumnCount(30);
 
+
+
+
+
         final Button outputFileButton = new Button("Укажите директорию");
 
         outputFileButton.setOnAction(event -> {
@@ -74,8 +78,9 @@ public class FXView extends Application {
         confirmButton.disableProperty().bind(confirmButtonBinding);
         confirmButton.setOnAction(event -> {
             Task parseData = new Task() { //специальный класс для потоков в JavaFX
+
                 @Override
-                protected Object call() throws IOException {
+                protected Object call() throws IOException{
                     Controller controller = new Controller();
                     Model model = new Model(inpXSLFile, outXLSDir,new ExcelParser());
                     controller.setModel(model);
@@ -83,6 +88,20 @@ public class FXView extends Application {
                     return null;
                 }
             };
+
+            parseData.setOnSucceeded(cancelEvt->{ //информирование о завершении программы
+                Alert cancelAlert = new Alert(Alert.AlertType.INFORMATION);
+                cancelAlert.setTitle("Программа завершила работу");
+                cancelAlert.setHeaderText("Файл был успешно создан в указанной директории");
+                cancelAlert.showAndWait();
+            });
+            parseData.setOnFailed(failEvt->{ //информирование о ошибке в программе
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Произошла ошибка");
+                alert.setHeaderText("При работе программы произошла ошибка");
+
+                alert.showAndWait();
+            });
             new Thread(parseData).start();//создание нового потока, для того чтобы графический интерфейс
                                             // не "подвисал" при обработке данных
         });
@@ -113,6 +132,7 @@ public class FXView extends Application {
         primaryStage.show();
 
     }
+
 
     private static void configureFileChooser(final FileChooser fileChooser) { //метод, задающий простейшите настройки для FileChooser
         fileChooser.setTitle("Выберите excel файл");
