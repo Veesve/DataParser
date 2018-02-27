@@ -8,7 +8,6 @@ import org.apache.poi.poifs.filesystem.NPOIFSFileSystem;
 import org.apache.poi.ss.usermodel.Row;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +28,7 @@ public class ExcelParser implements Parser {
             ArrayList<String> marks = getSheetInfo(spreadsheet);
             marksList.add(marks);
         }
-        //createOutputCSVFile(inputFile, outputDir, fs, spreadsheet, marks); // пусть останется до лучших времён
-        createOutputXLSFile(inputFile,outputDir,fs,spreadsheetNames,marksList);
+        createOutputXLSFile(outputDir,fs,spreadsheetNames,marksList);
 
 
     }
@@ -69,25 +67,7 @@ public class ExcelParser implements Parser {
         return marks;
     }
 
-    private void createOutputCSVFile(File inputFile,
-                                     File outputDir,
-                                     NPOIFSFileSystem fs,
-                                     HSSFSheet spreadsheet,
-                                     ArrayList<String> marks) throws IOException { //создание CSV файла со всеми выходными данными
-        // записываем в файл .csv с пометкой группы
-        String outputFileName = inputFile.getName().replace(".xls", "_" + spreadsheet.getSheetName() + ".csv");
-        File outputFile = new File(outputDir, outputFileName);
-        Writer wr = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8);
-
-        for (String s : marks) {
-            wr.write(s + ","+computeAverageMark(s)+'\n');
-        }
-
-        wr.close(); // сворачиваемся
-        fs.close();
-    }
-    private void createOutputXLSFile(File inputFile,
-                                     File outputDir,
+    private void createOutputXLSFile( File outputDir,
                                      NPOIFSFileSystem fs,
                                      List<String> spreadsheetNames,
                                      List<List<String>> marksList) throws IOException { //создание XLS файла с подсчитанным средним арифметическим
@@ -143,7 +123,16 @@ public class ExcelParser implements Parser {
                 default:{ }
             }
         }
-        return (double)sum/count;
+        return round((double)sum/count,2);
+    }
+
+    private static double round(double value, int places) { //округление числа до необходимого количества знаков после запятой
+        if(places < 0) throw new IllegalArgumentException();
+
+        long factor = (long)Math.pow(10,places);
+        value = value*factor;
+        long tmp = Math.round(value);
+        return (double)tmp/factor;
     }
 
 }
